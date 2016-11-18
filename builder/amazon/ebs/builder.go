@@ -99,6 +99,7 @@ func (b *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packe
 		&awscommon.StepPreValidate{
 			DestAmiName:     b.config.AMIName,
 			ForceDeregister: b.config.AMIForceDeregister,
+			Owners:          b.config.AMIUsers,
 		},
 		&awscommon.StepSourceAMIInfo{
 			SourceAmi:          b.config.SourceAmi,

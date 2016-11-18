@@ -14,6 +14,7 @@ import (
 //
 type StepPreValidate struct {
 	DestAmiName     string
+	Owners          []string
 	ForceDeregister bool
 }
 
@@ -26,12 +27,24 @@ func (s *StepPreValidate) Run(state multistep.StateBag) multistep.StepAction {
 
 	ec2conn := state.Get("ec2").(*ec2.EC2)
 
+	params := &ec2.DescribeImagesInput{}
+
+	params.Filters = []*ec2.Filter{{
+		Name:   aws.String("name"),
+		Values: []*string{aws.String(s.DestAmiName)},
+	}}
+
+	// We have owners to apply
+	if len(s.Owners) > 0 {
+		owners := make([]*string, len(s.Owners))
+		for i, owner := range s.Owners {
+			owners[i] = aws.String(owner)
+		}
+		params.Owners = owners
+	}
+
 	ui.Say("Prevalidating AMI Name...")
-	resp, err := ec2conn.DescribeImages(&ec2.DescribeImagesInput{
-		Filters: []*ec2.Filter{{
-			Name:   aws.String("name"),
-			Values: []*string{aws.String(s.DestAmiName)},
-		}}})
+	resp, err := ec2conn.DescribeImages(params)
 
 	if err != nil {
 		err := fmt.Errorf("Error querying AMI: %s", err)
